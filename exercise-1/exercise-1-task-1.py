@@ -17,12 +17,14 @@ import numpy as np
 # Plot the original image and print the Height, Width and number of Channels
 def load_image(img):
     plt.imshow(img)
-    height, width, channels = len(img), len(img[0]), len(img[0][0])
+    height, width, = img.shape
+    channels = len(img[0][0])
     print("height =", height, "width =", width, "channels =", channels)
     pltTitle = 'Dog image of ' + str(height) + ' X ' + str(width) + ' X ' + str(channels)
     plt.title(pltTitle)
     plt.show()
     plt.clf()
+
 
 # According to the start point coordinate to slice the crop we need
 def random_crop(img, x, y):
@@ -36,6 +38,7 @@ def random_crop(img, x, y):
     plt.clf()
     return img_crop
 
+
 # Covert RGB original image to grayscale
 def grayscale(img):
     R, G, B = img[:, :, 0], img[:, :, 1], img[:, :, 2]
@@ -45,6 +48,7 @@ def grayscale(img):
     plt.title(pltTitle)
     plt.show()
     return imgGray
+
 
 # Covert the grayscale slice to RGB channel and insert it back to the original image
 def insert_grayscale(img, img_crop_grayscale, x, y):
