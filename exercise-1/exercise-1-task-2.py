@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 def grayscale(img):
     R, G, B = img[:, :, 0], img[:, :, 1], img[:, :, 2]
-    imgGray = (0.2989 * R + 0.5870 * G + 0.1140 * B)/255
+    imgGray = 0.2989 * R + 0.5870 * G + 0.1140 * B
     plt.imshow(imgGray, cmap='gray')
     pltTitle = 'Grayscale images of Dog image'
     plt.title(pltTitle)
@@ -17,11 +17,16 @@ def grayscale(img):
 def convolution_operation(imgGray, conv_filter):
     print(conv_filter)
     height, width = imgGray.shape
+    size = len(conv_filter)
+    # create a new numpy array with padding to make sure the filtered image has the same size as the input image
+    # It must be noted, however, that filters of odd size will facilitate the calculation
+    img_padding = np.zeros((height + size - 1, width + size - 1))
+    img_padding[((size - 1) // 2):((size - 1) // 2 + height), ((size - 1) // 2):((size - 1) // 2 + width)] = imgGray
     img_conv = []
-    for i in range(height - len(conv_filter) - 1):
+    for i in range(height):
         row = []
-        for j in range(width - len(conv_filter) - 1):
-            input = imgGray[i:i + len(conv_filter), j:j + len(conv_filter)]
+        for j in range(width):
+            input = img_padding[i:i + len(conv_filter), j:j + len(conv_filter)]
             row.append(np.sum(np.multiply(input, conv_filter)))
         img_conv.append(row)
     return np.array(img_conv)
@@ -44,25 +49,21 @@ def gaussian_kernel(kernel_size, mean, variance):
     return kernel
 
 
+# def laplacian_filter(kernel_size):
+
+
 img = image.imread('dog.jpg')
+print(img.shape)
 imgGray = grayscale(img)
 filter_1 = np.asarray([[1, 2],
                        [2, 1]])
-
-# print(imgGray, height, width)
-# img_conv = convolution_operation(imgGray, filter_1)
-# plt.imshow(img_conv)
-# print(img_conv, img_conv.shape)
-# plt.show()
-# plt.clf()
-# img_conv_gaussian = convolution_operation(imgGray, gaussian_kernel(200, 2))
-
 gaussian_filter = gaussian_kernel(200, [60, 100], 30)
 plt.imshow(gaussian_filter, cmap='gray')
 plt.title('Gaussian Filter of 200x200 size')
 plt.show()
-img_conv_gaussian = convolution_operation(imgGray, gaussian_kernel(18, [10, 8], 30))
+img_conv_gaussian = convolution_operation(imgGray, gaussian_kernel(7, [4, 3], 30))
 print(img_conv_gaussian)
 plt.imshow(img_conv_gaussian, cmap='gray')
+print(img_conv_gaussian.shape)
 plt.title('blurred image of Dog image')
 plt.show()
