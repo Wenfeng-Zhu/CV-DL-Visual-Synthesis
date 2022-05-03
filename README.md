@@ -13,3 +13,6 @@ This repository used to save the exercise sheets of LMU-SS2022-Computer Vision a
 2. [x] Implement a Gaussian filter of size 200X200, kernel size, mean, and variance as inputs
 3. [x] Apply the Gaussian filter to the image dog.jpg with the suitable parameters
 ## Task-3: Introduction to PyTorch
+1. [x] Realize the Interchangeable between numpy array and torch array
+2. [x] implementation of convolution with Conv2d
+3. [ ] Implement the requirements in exercise 2 with Conv2d
