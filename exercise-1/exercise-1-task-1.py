@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import matplotlib.image as image
 import random
-from PIL import Image
 import numpy as np
+from PIL import Image
 
 
 # Load dog image through PIL library
@@ -18,7 +18,7 @@ import numpy as np
 def load_image(img):
     plt.imshow(img)
     print(img.shape)
-    height, width = img.shape[0],img.shape[1]
+    height, width = img.shape[0], img.shape[1]
     channels = img.shape[2]
     print("height =", height, "width =", width, "channels =", channels)
     pltTitle = 'Dog image of ' + str(height) + ' X ' + str(width) + ' X ' + str(channels)
@@ -29,13 +29,11 @@ def load_image(img):
 
 # According to the start point coordinate to slice the crop we need
 def random_crop(img, x, y):
-    print('start point is: ', x, ',', y)
     img_crop = img[y:(y + 256), x:(x + 256)]
     plt.imshow(img_crop)
     pltTitle = 'Random Crop of 256 X 256 X 3 starts from (' + str(x) + ' , ' + str(y) + ')'
     plt.title(pltTitle)
     plt.show()
-    print("height =", len(img_crop), "width =", len(img_crop[0]))
     plt.clf()
     return img_crop
 
@@ -62,8 +60,14 @@ def insert_grayscale(img, img_crop_grayscale, x, y):
     return img
 
 
-def resize(img, x, y):
-    img[y:(y + 256), x:(x + 256)] = np.stack((img_crop_grayscale,) * 3, axis=-1)
+def resize(img, factor):
+    new_size = int(img.shape[1] * factor), int(img.shape[0] * factor)
+    img_pil = Image.fromarray(img)
+    img_resize = img_pil.resize(new_size)
+    plt.imshow(img_resize)
+    pltTitle = 'Resize image with 1/2 of grayscale-inserted imag'
+    plt.title(pltTitle)
+    plt.show()
 
 
 # use the imread() function to load the dog image, and it will return a NumPy array
@@ -76,3 +80,4 @@ load_image(img)
 img_crop = random_crop(img, start_x, start_y)
 img_crop_grayscale = grayscale(img_crop)
 img_insert_grayscale = insert_grayscale(img, img_crop_grayscale, start_x, start_y)
+resize(img_insert_grayscale, 0.5)
