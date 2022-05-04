@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.image as image
 import matplotlib.pyplot as plt
-import cv2
+# import cv2
 
 
 def grayscale(img):
@@ -102,10 +102,10 @@ img_laplacian = laplacian_filter(imgGray, 7, 1)
 # plt.title('Sharpening image of Dog image')
 # print(img_laplacian)
 # plt.show()
-source = cv2.imread('dog.jpg', cv2.IMREAD_COLOR)
-source = cv2.GaussianBlur(source, (3, 3), 0)
-source_gray = cv2.cvtColor(source, cv2.COLOR_BGR2GRAY)
-dest = cv2.Laplacian(source_gray, cv2.CV_16S, ksize=3)
-abs_dest = cv2.convertScaleAbs(dest)
-plt.imshow(abs_dest, cmap="gray")
-plt.show()
+# source = cv2.imread('dog.jpg', cv2.IMREAD_COLOR)
+# source = cv2.GaussianBlur(source, (3, 3), 0)
+# source_gray = cv2.cvtColor(source, cv2.COLOR_BGR2GRAY)
+# dest = cv2.Laplacian(source_gray, cv2.CV_16S, ksize=3)
+# abs_dest = cv2.convertScaleAbs(dest)
+# plt.imshow(abs_dest, cmap="gray")
+# plt.show()

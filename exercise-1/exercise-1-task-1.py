@@ -17,8 +17,9 @@ import numpy as np
 # Plot the original image and print the Height, Width and number of Channels
 def load_image(img):
     plt.imshow(img)
-    height, width, = img.shape
-    channels = len(img[0][0])
+    print(img.shape)
+    height, width = img.shape[0],img.shape[1]
+    channels = img.shape[2]
     print("height =", height, "width =", width, "channels =", channels)
     pltTitle = 'Dog image of ' + str(height) + ' X ' + str(width) + ' X ' + str(channels)
     plt.title(pltTitle)
