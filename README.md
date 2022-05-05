@@ -7,7 +7,7 @@ This repository used to save the exercise sheets of LMU-SS2022-Computer Vision a
 2. [x] random slice function
 3. [x] RGB to grayscale of the slice
 4. [x] insert grayscale slice back to the original image
-5. [ ] resize function
+5. [x] resize function
 ## Task-2: Convolution and Filters
 1. [x] Generalized convolution operation
 2. [x] Implement a Gaussian filter of size 200X200, kernel size, mean, and variance as inputs
@@ -15,4 +15,4 @@ This repository used to save the exercise sheets of LMU-SS2022-Computer Vision a
 ## Task-3: Introduction to PyTorch
 1. [x] Realize the Interchangeable between numpy array and torch array
 2. [x] implementation of convolution with Conv2d
-3. [ ] Implement the requirements in exercise 2 with Conv2d
+3. [x] Implement the requirements in exercise 2 with Conv2d
