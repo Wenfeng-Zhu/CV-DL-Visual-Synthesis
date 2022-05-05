@@ -4,6 +4,7 @@ import matplotlib.image as image
 import matplotlib.pyplot as plt
 
 
+# Interchangeable between numpy and torch
 def numpy_to_torch():
     img = image.imread('dog.jpg')
     plt.imshow(img)
@@ -18,6 +19,7 @@ def numpy_to_torch():
     plt.show()
 
 
+# Normal convolution
 def convolution_operation(imgGray, conv_filter):
     height, width = imgGray.shape[0], imgGray.shape[1]
     size = len(conv_filter)
@@ -40,7 +42,6 @@ def gaussian_kernel(kernel_size, mean, variance):
             x, y = i - mean[0], j - mean[1]
             # gaussian kernel function
             kernel[i, j] = np.exp(-(x ** 2 + y ** 2) / (2 * variance)) / (2 * np.pi * variance)
-    # kernel = normalized_grayscale(kernel)
     print('Gaussian Kernel of size', kernel_size, "x", kernel_size, ", mean", mean, ", variance", variance)
     return kernel
 
@@ -48,17 +49,15 @@ def gaussian_kernel(kernel_size, mean, variance):
 def grayscale(img):
     R, G, B = img[:, :, 0], img[:, :, 1], img[:, :, 2]
     imgGray = 0.2989 * R + 0.5870 * G + 0.1140 * B
-    plt.imshow(imgGray, cmap='gray')
-    pltTitle = 'Grayscale images of Dog image'
-    plt.title(pltTitle)
-    plt.show()
-    # print('grayscale image: ', imgGray)
     return imgGray
 
 
+# Input and filter
 x = np.random.rand(5, 5, 1)
 w = np.random.rand(2, 2, 1)
+# create a convolution operation with conv2d
 conv = torch.nn.Conv2d(1, 1, (2, 2), bias=False)
+# turn the numpy array to tensor
 x_torch = torch.from_numpy(x).permute(2, 0, 1)
 w_torch = torch.from_numpy(w).permute(2, 0, 1)
 x_torch_add = x_torch[None, :]
@@ -69,16 +68,24 @@ output = conv(x_torch_add)
 print("Output of conv2d:\n", output)
 output_own = convolution_operation(x, w)
 print("Output of my own operation:\n", output_own)
-# print(conv.weight)
+
+# Load the dog image and turn it to grayscale and output a plot
 img = image.imread('dog.jpg')
 imgGray = grayscale(img)
+plt.imshow(imgGray, cmap='gray')
+pltTitle = 'Grayscale images of Dog image'
+plt.title(pltTitle)
+plt.show()
+
+# Turn the grayscale numpy array to tensor
 imgGray_torch = torch.from_numpy(imgGray)[:, :, None]
 imgGray_torch = imgGray_torch.permute(2, 0, 1)
 imgGray_torch_add = imgGray_torch[None, :]
-print(imgGray.shape)
+# create a gaussian filter and turn it to tensor
 gaussian_filter = gaussian_kernel(7, [4, 3], 30)
 gaussian_filter_torch = torch.from_numpy(gaussian_filter).permute(2, 0, 1)
 gaussian_filter_torch_add = gaussian_filter_torch[None, :]
+# Apply the gaussian filter to conv2d convolution operation
 conv.weight = torch.nn.Parameter(gaussian_filter_torch_add)
 output_conv = conv(imgGray_torch_add).detach().numpy()[0][0]
 plt.imshow(output_conv, cmap='gray')

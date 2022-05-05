@@ -3,10 +3,8 @@ import matplotlib.image as image
 import matplotlib.pyplot as plt
 
 
-# import cv2
-
-
-def convolution_fix():
+# Convolution operation using the fixed array shown in the Fig. 1 as the input and  the filter
+def convolution_fixed():
     np.set_printoptions(linewidth=9)
     img = np.array([[[0], [2], [1]], [[3], [4], [2]], [[1], [0], [3]]])
     print("The input array is:\n", img)
@@ -31,12 +29,14 @@ def grayscale(img):
     return imgGray
 
 
+# Normalization function for grayscale arrays
 def normalized_grayscale(array):
     norm = (array - np.min(array)) / (np.max(array) - np.min(array))
     # array = array * norm * 255
     return array * norm * 255
 
 
+# General convolution operation function with grayscale map and convolution kernel as input
 def convolution_operation(imgGray, conv_filter):
     height, width = imgGray.shape
     size = len(conv_filter)
@@ -54,6 +54,7 @@ def convolution_operation(imgGray, conv_filter):
     return np.array(img_conv)
 
 
+# The function take in the kernel size, mean, and variance as inputs to create a gaussian filter
 def gaussian_kernel(kernel_size, mean, variance):
     kernel = np.zeros((kernel_size, kernel_size))
     for i in range(kernel_size):
@@ -66,6 +67,7 @@ def gaussian_kernel(kernel_size, mean, variance):
     return kernel
 
 
+# The formula of Laplace Gaussian operator
 def laplacian_of_gaussian(x, y, sigma):
     # Formatted this way for readability
     nom = (y ** 2) + (x ** 2) - 2 * (sigma ** 2)
@@ -74,6 +76,7 @@ def laplacian_of_gaussian(x, y, sigma):
     return (nom * expo / denom)
 
 
+# Generate Laplace Gaussian filter with sigma and size as input
 def create_log(sigma, kernel_size):
     w = (np.ceil(float(kernel_size) * float(sigma)))
     if w % 2 == 0:
@@ -88,7 +91,8 @@ def create_log(sigma, kernel_size):
     return l_o_g_mask
 
 
-def laplacian_filter(imgGray, kernel_size, sigma):
+# Convolution operation based on Laplace Gaussian filter
+def laplacian_convolution(imgGray, kernel_size, sigma):
     log_mask = create_log(sigma, kernel_size)
     img_log = convolution_operation(imgGray, log_mask)
     norm = (img_log - np.min(img_log)) / (np.max(img_log) - np.min(img_log))
@@ -96,23 +100,21 @@ def laplacian_filter(imgGray, kernel_size, sigma):
     return img_log
 
 
-convolution_fix()
-
+convolution_fixed()
 img = image.imread('dog.jpg')
-
 imgGray = grayscale(img)
-
+# generation of a gaussian filer with 200*200 size, [80, 100] mean and 50 variance
 gaussian_filter = gaussian_kernel(200, [80, 100], 50)
 plt.imshow(gaussian_filter, cmap='gray')
 plt.title('Gaussian Kernel')
 plt.show()
-
+# Gaussian filter based convolution operation
 img_conv_gaussian = convolution_operation(imgGray, gaussian_kernel(7, [4, 3], 30))
 plt.imshow(img_conv_gaussian, cmap="gray")
-plt.title('Blurred image')
+plt.title('Blurred image with Gaussian convolution')
 plt.show()
-
-img_laplacian = laplacian_filter(imgGray, 7, 1)
+# Laplace Gaussian filter based convolution operation
+img_laplacian = laplacian_convolution(imgGray, 7, 1)
 plt.imshow(img_laplacian, cmap="gray")
 plt.title('Laplace operation')
 plt.show()

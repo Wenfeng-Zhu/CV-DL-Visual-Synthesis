@@ -5,19 +5,9 @@ import numpy as np
 from PIL import Image
 
 
-# Load dog image through PIL library
-# img = Image.open('dog.jpg')
-# width, height = img.size
-# print(width, height, img.mode)
-# # imgplot = plt.imshow(img)
-# print(len(img.getbands()))
-# imgTitle = str(height)+'X'+str(width)+'X'+str(len(img.getbands()))
-# img.show(title = imgTitle)
-
 # Plot the original image and print the Height, Width and number of Channels
 def load_image(img):
     plt.imshow(img)
-    print(img.shape)
     height, width = img.shape[0], img.shape[1]
     channels = img.shape[2]
     print("height =", height, "width =", width, "channels =", channels)
@@ -41,11 +31,8 @@ def random_crop(img, x, y):
 # Covert RGB original image to grayscale
 def grayscale(img):
     R, G, B = img[:, :, 0], img[:, :, 1], img[:, :, 2]
+    # RGB to grayscale formula
     imgGray = 0.2989 * R + 0.5870 * G + 0.1140 * B
-    plt.imshow(imgGray, cmap='gray')
-    pltTitle = 'Grayscale images of Random Crop'
-    plt.title(pltTitle)
-    plt.show()
     return imgGray
 
 
@@ -60,9 +47,12 @@ def insert_grayscale(img, img_crop_grayscale, x, y):
     return img
 
 
+# use the image and resize factor as the input
 def resize(img, factor):
     new_size = int(img.shape[1] * factor), int(img.shape[0] * factor)
+    # use PIL library to transform numpy array to PIL array
     img_pil = Image.fromarray(img)
+    # use the resize() function of PIL library
     img_resize = img_pil.resize(new_size)
     plt.imshow(img_resize)
     pltTitle = 'Resize image with 1/2 of grayscale-inserted imag'
@@ -76,8 +66,17 @@ img = image.imread('dog.jpg')
 height, width, channels = len(img), len(img[0]), len(img[0][0])
 # randomly generate the start point of the slice of 256*256 size
 start_x, start_y = random.randint(0, (width - 257)), random.randint(0, (height - 257))
+# Load dog image with Load() function
 load_image(img)
+# Random Crop
 img_crop = random_crop(img, start_x, start_y)
+# Turn the random crop to grayscale
 img_crop_grayscale = grayscale(img_crop)
+plt.imshow(img_crop_grayscale, cmap='gray')
+pltTitle = 'Grayscale images of Random Crop'
+plt.title(pltTitle)
+plt.show()
+# Insert the grayscale random crop to original image
 img_insert_grayscale = insert_grayscale(img, img_crop_grayscale, start_x, start_y)
+# resize the image
 resize(img_insert_grayscale, 0.5)
