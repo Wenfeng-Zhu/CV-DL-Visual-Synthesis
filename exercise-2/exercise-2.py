@@ -33,12 +33,12 @@ class LinearLeastSquares(object):
 
     def fit(self, x, y):
         # TODO find minimizer of least squares objective
-        self.w = np.linalg.inv(x.T @ x) @ x.T @ y
+        x_bias = np.c_[x, np.ones(len(x))]
+        self.w = (np.linalg.inv(x_bias.T @ x_bias) @ x_bias.T @ y)
 
     def predict(self, xquery):
         # TODO implement prediction using linear score function
-        y_predict = np.sign(xquery @ self.w)
-        print(y_predict)
+        y_predict = np.sign(np.c_[xquery, np.ones(len(xquery))] @ self.w)
         return y_predict
 
 
@@ -65,7 +65,7 @@ def task1():
         xx, yy = np.meshgrid(x, y)
         z = lls.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
         plt.contourf(xx, yy, z, cmap=plt.cm.Paired)
-        plt.scatter(xtrain[:, 0], xtrain[:, 1])
+        plt.scatter(xtest[:, 0], xtest[:, 1])
         plt.xlim(-1.5, 2.5)
         plt.ylim(-1.0, 1.5)
         pltTitle = "decision boundary and test data with outlier of " + str(outlier)
