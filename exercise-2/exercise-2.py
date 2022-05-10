@@ -42,13 +42,6 @@ class LinearLeastSquares(object):
         return y_predict
 
 
-def color(y):
-    if y == 1:
-        return "red"
-    else:
-        return "blue"
-
-
 def task1():
     # get data
     for outlier in [1, 2, 4, 8, 16]:
@@ -85,5 +78,57 @@ def task1():
         plt.show()
 
 
+class KNN(object):
+    def __init__(self, n_neighbors):
+        self.n_neighbors = n_neighbors
+
+    def fit(self, x, y):
+        self.x = x
+        self.y = y
+
+    def kneighbors(self, xquery):
+        # TODO return indices of nearest neighbor points and distances to them
+        pass
+
+    def predict(self, xquery):
+        # TODO return predicted label for each query point
+        pass
+
+
+def task2():
+    # get data
+    n = 1000
+    n_train = 900
+    n_test = n - n_train
+    x, y = sklearn.datasets.make_moons(n_samples=n, noise=0.2,
+                                       random_state=0)
+    xtrain, ytrain = x[:n_train,...], y[:n_train,...]
+    xtest, ytest = x[n_train:,...], y[n_train:,...]
+
+    # TODO visualize data via scatterplot
+    xytrain = np.c_[xtrain, ytrain]
+    plt.scatter(xytrain[xytrain[:, 2] == 1][:, 0], xytrain[xytrain[:, 2] == 1][:, 1], color="red")
+    plt.scatter(xytrain[xytrain[:, 2] == 0][:, 0], xytrain[xytrain[:, 2] == 0][:, 1], color="blue")
+    plt.title("Training Dataset")
+    plt.show()
+    # TODO for k=5 check that our implementation predicts the same as that of
+    # sklearn.
+    k = 5
+    sknn = sklearn.neighbors.KNeighborsClassifier(n_neighbors=k)
+    knn = KNN(n_neighbors=k)
+
+    # analyze different values of k
+    ks = [2**i for i in range(10)]
+    for k in ks:
+        # TODO fit and evaluate accuracy on test data
+        knn = KNN(n_neighbors=k)
+
+        # TODO plot decision boundary
+        N = 100
+        x = np.linspace(-1.5, 2.5, N)
+        y = np.linspace(-1.0, 1.5, N)
+
+
 if __name__ == "__main__":
-    task1()
+    # task1()
+    task2()
