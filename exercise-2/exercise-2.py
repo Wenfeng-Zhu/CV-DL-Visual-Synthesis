@@ -42,6 +42,13 @@ class LinearLeastSquares(object):
         return y_predict
 
 
+def color(y):
+    if y == 1:
+        return "red"
+    else:
+        return "blue"
+
+
 def task1():
     # get data
     for outlier in [1, 2, 4, 8, 16]:
@@ -49,7 +56,9 @@ def task1():
         xtrain, xtest, ytrain, ytest, xplot, yplot = make_data(outlier=outlier)
 
         # TODO visualize xtrain via scatterplot
-        plt.scatter(xtrain[:, 0], xtrain[:, 1])
+        xytrain = np.c_[xtrain, ytrain]
+        plt.scatter(xytrain[xytrain[:, 2] == 1][:, 0], xytrain[xytrain[:, 2] == 1][:, 1], color="red")
+        plt.scatter(xytrain[xytrain[:, 2] == -1][:, 0], xytrain[xytrain[:, 2] == -1][:, 1], color="blue")
         pltTitle = "Training Dataset with outlier of " + str(outlier)
         plt.title(pltTitle)
         plt.show()
@@ -65,7 +74,10 @@ def task1():
         xx, yy = np.meshgrid(x, y)
         z = lls.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
         plt.contourf(xx, yy, z, cmap=plt.cm.Paired)
-        plt.scatter(xtest[:, 0], xtest[:, 1])
+        xytest = np.c_[xtest, y_predict]
+        # plt.scatter(xtest[:, 0], xtest[:, 1])
+        plt.scatter(xytest[xytest[:, 2] == 1][:, 0], xytest[xytest[:, 2] == 1][:, 1], color="red")
+        plt.scatter(xytest[xytest[:, 2] == -1][:, 0], xytest[xytest[:, 2] == -1][:, 1], color="blue")
         plt.xlim(-1.5, 2.5)
         plt.ylim(-1.0, 1.5)
         pltTitle = "decision boundary and test data with outlier of " + str(outlier)
