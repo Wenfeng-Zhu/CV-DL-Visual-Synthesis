@@ -170,6 +170,7 @@ def task2():
 
 
 def task3():
+    print("The plot of prediction was impelmented by Sklearn")
     data = sklearn.datasets.load_digits()
     x, y = (data.images / 16.0).reshape(-1, 8 * 8), data.target
     xtrain, xtest, ytrain, ytest = sklearn.model_selection.train_test_split(
@@ -196,15 +197,14 @@ def task3():
                 fail.append(i)
         accuracy = sum / len(y_predict)
         accuracy_array.append(accuracy)
-        print("The accuracy of knn with k =", k, "is:", accuracy)
+        print("The accuracy of sknn with k =", k, "is:", accuracy)
 
     plt.xlabel("k: Number of Neighbors")
     plt.ylabel("Accuracy")
-    plt.title("The accuracies of different k-neighbors")
+    plt.title("The accuracies of different k-neighbors with Sklearn")
     plt.scatter(k_array, accuracy_array)
     plt.plot(k_array, accuracy_array)
     plt.show()
-
 
     # TODO plot nearest neighbors
     # Take 5 from each of the successful and failed test data
@@ -217,7 +217,7 @@ def task3():
         kneighbors = sknn.kneighbors([xtest[i]], return_distance=False)
         plt.subplot(3, 3, 1)
         plt.imshow(xtest[i].reshape([8, 8]))
-        pltTitle = "Success Predict:"+str(sknn.predict([xtest[i]]))
+        pltTitle = "Success Predict:" + str(sknn.predict([xtest[i]]))
         plt.title(pltTitle)
         # print(kneighbors[0])
         num = 2
@@ -234,7 +234,7 @@ def task3():
         kneighbors = sknn.kneighbors([xtest[i]], return_distance=False)
         plt.subplot(3, 3, 1)
         plt.imshow(xtest[i].reshape([8, 8]))
-        pltTitle = "Predict:" + str(sknn.predict([xtest[i]]))+"Truth:"+str([ytest[i]])
+        pltTitle = "Predict:" + str(sknn.predict([xtest[i]])) + "Truth:" + str([ytest[i]])
         plt.title(pltTitle)
         num = 2
         for i in kneighbors[0]:
@@ -247,8 +247,7 @@ def task3():
         plt.show()
 
 
-
 if __name__ == "__main__":
-    # task1()
+    task1()
     task2()
-    # task3()
+    task3()
