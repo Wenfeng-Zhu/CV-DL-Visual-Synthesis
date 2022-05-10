@@ -88,11 +88,27 @@ class KNN(object):
 
     def kneighbors(self, xquery):
         # TODO return indices of nearest neighbor points and distances to them
-        pass
+        dist = np.zeros((len(xquery), len(self.x)))
+        # because(X - X_train)*(X - X_train) = -2X*X_train + X*X + X_train*X_train, so
+        # d1 = -2 * (xquery @ self.x.T)
+        # d2 = np.sum(np.square(xquery), axis=1, keepdims=True)
+        # d3 = np.sum(np.square(self.x), axis=1)
+        # dist = np.sqrt(d1 + d2 + d3)
+        dist = np.reshape(np.sum(xquery ** 2, axis=1), (xquery.shape[0], 1)) + np.sum(self.x ** 2,
+                                                                                      axis=1) - 2 * xquery.dot(self.x.T)
+        k_indices = np.argpartition(dist, self.n_neighbors, axis=1)[:, :self.n_neighbors]
+        # k_indices = np.argsort(dist, axis=1)[:, :self.n_neighbors]
+        k_dist = np.take_along_axis(dist, k_indices, axis=1)
+        return k_indices
 
     def predict(self, xquery):
         # TODO return predicted label for each query point
-        pass
+        y_predict = np.zeros(xquery.shape[0], dtype=int)
+        k_indices = self.kneighbors(xquery)
+        for i in range(len(xquery)):
+            y_knear = self.y[k_indices[i]]
+            y_predict[i] = np.argmax(np.bincount(y_knear))
+        return y_predict
 
 
 def task2():
@@ -102,8 +118,9 @@ def task2():
     n_test = n - n_train
     x, y = sklearn.datasets.make_moons(n_samples=n, noise=0.2,
                                        random_state=0)
-    xtrain, ytrain = x[:n_train,...], y[:n_train,...]
-    xtest, ytest = x[n_train:,...], y[n_train:,...]
+    xtrain, ytrain = x[:n_train, ...], y[:n_train, ...]
+    xtest, ytest = x[n_train:, ...], y[n_train:, ...]
+    # print(xtrain)
 
     # TODO visualize data via scatterplot
     xytrain = np.c_[xtrain, ytrain]
@@ -111,22 +128,63 @@ def task2():
     plt.scatter(xytrain[xytrain[:, 2] == 0][:, 0], xytrain[xytrain[:, 2] == 0][:, 1], color="blue")
     plt.title("Training Dataset")
     plt.show()
-    # TODO for k=5 check that our implementation predicts the same as that of
-    # sklearn.
+    # TODO for k=5 check that our implementation predicts the same as that of sklearn.
     k = 5
     sknn = sklearn.neighbors.KNeighborsClassifier(n_neighbors=k)
+    sknn.fit(xtrain, ytrain)
     knn = KNN(n_neighbors=k)
+    knn.fit(xtrain, ytrain)
+    # print(xtest)
+    y_predict = knn.predict(xtest)
+    print("The predict of knn:\n", y_predict, "\nThe predict of sknn:\n", sknn.predict(xtest))
+    # accuracy = 1 - np.sum((y_predict + ytest) == 1) / len(y_predict)
+    # print("The accuracy of knn is: ", accuracy)
 
     # analyze different values of k
-    ks = [2**i for i in range(10)]
+    ks = [2 ** i for i in range(10)]
+    accuracy_array = []
+    k_array = []
+    # print(xtest)
     for k in ks:
         # TODO fit and evaluate accuracy on test data
+        k_array.append(str(k))
+        sknn = sklearn.neighbors.KNeighborsClassifier(n_neighbors=k)
+        sknn.fit(xtrain, ytrain)
         knn = KNN(n_neighbors=k)
-
+        knn.fit(xtrain, ytrain)
+        y_predict = knn.predict(xtest)
+        accuracy = 1 - np.sum((y_predict + ytest) == 1) / len(y_predict)
+        accuracy_array.append(accuracy)
+        print("The accuracy of knn with k = ", k, " is: ", accuracy)
+        # plt.xlabel("k: Number of Neighbors")
+        # plt.ylabel("Accuracy")
+        # plt.title("The accuracies of different k-neighbors")
+        # plt.scatter(k_array, accuracy_array)
+        # plt.plot(k_array, accuracy_array)
+        # plt.show()
         # TODO plot decision boundary
         N = 100
         x = np.linspace(-1.5, 2.5, N)
         y = np.linspace(-1.0, 1.5, N)
+        xx, yy = np.meshgrid(x, y)
+        z = knn.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
+        plt.contourf(xx, yy, z, cmap=plt.cm.Paired)
+        xytest = np.c_[xtest, y_predict]
+        plt.scatter(xytest[xytest[:, 2] == 1][:, 0], xytest[xytest[:, 2] == 1][:, 1], color="red")
+        plt.scatter(xytest[xytest[:, 2] == 0][:, 0], xytest[xytest[:, 2] == 0][:, 1], color="blue")
+        pltTitle = "decision boundary and test data with k =" + str(k)
+        plt.title(pltTitle)
+        plt.show()
+
+        # plt.contourf(xx, yy, z, cmap=plt.cm.Paired)
+        # xytest = np.c_[xtest, y_predict]
+        # plt.scatter(xytest[xytest[:, 2] == 1][:, 0], xytest[xytest[:, 2] == 1][:, 1], color="red")
+        # plt.scatter(xytest[xytest[:, 2] == 0][:, 0], xytest[xytest[:, 2] == -1][:, 1], color="blue")
+        # plt.xlim(-1.5, 2.5)
+        # plt.ylim(-1.0, 1.5)
+        # pltTitle = "decision boundary and test data with k = " + str(k)
+        # plt.title(pltTitle)
+        # plt.show()
 
 
 if __name__ == "__main__":
