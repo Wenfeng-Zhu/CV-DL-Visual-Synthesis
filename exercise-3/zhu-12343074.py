@@ -34,7 +34,7 @@ def plot_examples(data):
     for i in range(10):
         plt.subplot(2, 5, i + 1)
         plt.imshow(data.data[start + i].numpy(), cmap="gray")
-        plt.title(data.targets[i])
+        plt.title(data.targets[i+start])
     plt.show()
 
 
