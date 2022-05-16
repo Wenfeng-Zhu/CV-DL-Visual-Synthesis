@@ -34,10 +34,8 @@ def plot_examples(data):
     for i in range(10):
         plt.subplot(2, 5, i + 1)
         plt.imshow(data.data[start + i].numpy(), cmap="gray")
-        plt.title(data.targets[i+start])
+        plt.title(data.targets[i + start])
     plt.show()
-
-
 
 
 def convert_mnist_to_vectors(data):
@@ -52,12 +50,26 @@ def convert_mnist_to_vectors(data):
     #########################
     #### Your Code here  ####
     #########################
-
+    # image--PIL.Image.Image; label--int
     for image, label in tqdm(data):
-        pass
+        mnist_vectors.append(np.asarray(image).ravel())
+        labels.append(label)
 
     # return as numpy arrays
-    return mnist_vectors, labels
+    mnist_vectors = np.asarray(mnist_vectors)
+    # print(mnist_vectors.mean(axis=1).shape)
+    # np.subtract()
+    # mnist_vectors = (mnist_vectors - mnist_vectors.mean(axis=0)[:, None]) / (mnist_vectors.max(
+    #     axis=1) - mnist_vectors.min(axis=1))[:, None] * 2
+    # mnist_vectors_max = mnist_vectors.max(axis=1)[:, None]
+    # mnist_vectors_min = mnist_vectors.min(axis=1)[:, None]
+    # mnist_vectors_mean = mnist_vectors.mean(axis=1)[:, None]
+    # mnist_vectors_sub = mnist_vectors_max - mnist_vectors_min
+    mnist_vectors_center = (mnist_vectors - mnist_vectors.mean(axis=1)[:, None]) / (
+            mnist_vectors.max(axis=1)[:, None] - mnist_vectors.min(axis=1)[:, None])
+    labels = np.asarray(labels)
+
+    return mnist_vectors_center, labels
 
 
 def do_pca(data):
@@ -71,6 +83,7 @@ def do_pca(data):
 
     # compute covariance matrix of data with shape [784x784]
     cov = np.cov(mnist_vectors.T)
+    # print("covariance matrix",cov[390])
 
     # compute eigenvalues and vectors
     eigVals, eigVec = np.linalg.eig(cov)
@@ -80,7 +93,8 @@ def do_pca(data):
     eigVals = eigVals[sorted_index]
     sorted_eigenVectors = eigVec[:, sorted_index]
     print(type(sorted_eigenVectors), sorted_eigenVectors.shape)
-    return sorted_eigenVectors.astype(np.float).T
+    sorted_eigenVectors_real = sorted_eigenVectors.real.astype(float).T
+    return sorted_eigenVectors.real.astype(float).T
 
 
 def plot_pcs(sorted_eigenVectors, num=10):
@@ -89,7 +103,13 @@ def plot_pcs(sorted_eigenVectors, num=10):
     #########################
     #### Your Code here  ####
     #########################
-    pass
+    pc_10 = np.empty((10, 28, 28))
+    for i in range(num):
+        pc_10[i] = sorted_eigenVectors[i].reshape((28, 28))
+        plt.subplot(2, 5, i + 1)
+        plt.imshow(sorted_eigenVectors[i].reshape((28, 28)), cmap="gray")
+        plt.title("PC-" + str(i + 1))
+    plt.show()
 
 
 def plot_projection(sorted_eigenVectors, data):
@@ -99,7 +119,18 @@ def plot_projection(sorted_eigenVectors, data):
     #########################
     #### Your Code here  ####
     #########################
-    pass
+    mnist_vectors, labels = convert_mnist_to_vectors(data)
+    pc_1 = mnist_vectors @ sorted_eigenVectors[0]
+    pc_2 = mnist_vectors @ sorted_eigenVectors[1]
+    for i in range(10):
+        indices = np.argwhere(labels == i).ravel()
+        # print(indices.shape, pc_1.shape)
+        plt.scatter(pc_1, pc_2)
+        plt.scatter(pc_1[indices], pc_2[indices], color="red")
+        plt.xlabel("PC-1")
+        plt.ylabel("PC-2")
+        plt.title("Projection from MNIST to 1&2-PC feature space(Red with label-" + str(i)+")")
+        plt.show()
 
 
 if __name__ == '__main__':
@@ -108,7 +139,7 @@ if __name__ == '__main__':
     data = load_data()
 
     # subtask 1
-    plot_examples(data)
+    # plot_examples(data)
 
     # # subtask 2
     # mnist_vectors, labels = convert_mnist_to_vectors(data)
@@ -117,10 +148,10 @@ if __name__ == '__main__':
     #
     #
     # # subtask 3
-    # pcs = do_pca(data)
+    pcs = do_pca(data)
     #
     # # subtask 3
     # plot_pcs(pcs)
     #
     # # subtask 4
-    # plot_projection(pcs, data)
+    plot_projection(pcs, data)
