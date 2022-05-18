@@ -111,18 +111,18 @@ def plot_projection(sorted_eigenVectors, data):
     #########################
     #### Your Code here  ####
     #########################
+    colorList = ["blue", "orange", "green", "red", "purple", "brown", "pink", "gray", "olive", "cyan"]
     mnist_vectors, labels = convert_mnist_to_vectors(data)
     pc_1 = mnist_vectors @ sorted_eigenVectors[0]
     pc_2 = mnist_vectors @ sorted_eigenVectors[1]
     for i in range(10):
         indices = np.argwhere(labels == i).ravel()
         # print(indices.shape, pc_1.shape)
-        plt.scatter(pc_1, pc_2)
-        plt.scatter(pc_1[indices], pc_2[indices], color="red")
+        plt.scatter(pc_1[indices], pc_2[indices], color=colorList[i], marker="o", s=2)
         plt.xlabel("PC-1")
         plt.ylabel("PC-2")
-        plt.title("Projection from MNIST to 1&2-PC feature space(Red with label-" + str(i) + ")")
-        plt.show()
+        plt.title("Distribution projection from MNIST to 1&2-PC feature space")
+    plt.show()
 
 
 # =================================================================Task-3================================================================
@@ -141,20 +141,33 @@ class MultilayerPerceptron(nn.Module):
 
         self.relu = nn.ReLU()
 
+        self.act_features_1 = torch.empty((0, size_hidden),
+                                          device='cuda:0' if torch.cuda.is_available() else "cpu")
+        self.act_features_2 = torch.empty((0, size_hidden),
+                                          device='cuda:0' if torch.cuda.is_available() else "cpu")
+        self.act_features_3 = torch.empty((0, size_hidden),
+                                          device='cuda:0' if torch.cuda.is_available() else "cpu")
+        self.act_features_4 = torch.empty((0, size_hidden),
+                                          device='cuda:0' if torch.cuda.is_available() else "cpu")
+
     def forward(self, x):
         out = self.fc1(x)
         out = self.relu(out)
+        self.act_features_1 = torch.cat([self.act_features_1, out], dim=0)
 
         # Your Code here: The rest of the layers
 
         out = self.fc2(out)
         out = self.relu(out)
+        self.act_features_2 = torch.cat([self.act_features_2, out], dim=0)
 
         out = self.fc3(out)
         out = self.relu(out)
+        self.act_features_3 = torch.cat([self.act_features_3, out], dim=0)
 
         out = self.fc4(out)
         out = self.relu(out)
+        self.act_features_4 = torch.cat([self.act_features_4, out], dim=0)
 
         out = self.out_layer(out)
 
@@ -298,10 +311,61 @@ def train(use_gpu=True):  # if torch.cuda.is_available(), use gpu to speed up tr
         # P = MultilayerPerceptron()
         # P.load_state_dict(torch.load(perceptron_3750.ckpt))
         # Make sure to use the latest checkpoint by entering the right number.
-
         ######################################
         ###### Add code for task 4 here ######
         ######################################
+
+
+def task_4():
+    P = MultilayerPerceptron()
+    P.cuda()
+    P.load_state_dict(torch.load("perceptron_3749.ckpt"))
+    TestData = MnistVectors('test')
+    testDl = DataLoader(TestData, batch_size=1, shuffle=False)
+    labels_test = testDl.dataset.labels
+    for idx, [test_ex, test_l] in enumerate(tqdm(testDl, desc='Test')):
+        test_ex = test_ex.cuda()
+        P(test_ex)
+    pass
+
+    def mpl_pca_projection(features, layer, labels):
+        features_center = (features - features.mean(axis=1)[:, None]) / (
+                features.max(axis=1)[:, None] - features.min(axis=1)[:, None])
+        # features_center = features
+        cov = np.cov(features_center.T)
+        # print("covariance matrix",cov[390])
+
+        # compute eigenvalues and vectors
+        eigVals, eigVec = np.linalg.eig(cov)
+
+        # sort eigenVectors by eigenValues
+        sorted_index = eigVals.argsort()[::-1]
+        eigVals = eigVals[sorted_index]
+        sorted_eigenVectors = eigVec[:, sorted_index]
+        sorted_eigenVectors_real = sorted_eigenVectors.real.astype(float).T
+        pc_1 = features_center @ sorted_eigenVectors_real[0]
+        pc_2 = features_center @ sorted_eigenVectors_real[1]
+        colorList = ["blue", "orange", "green", "red", "purple", "brown", "pink", "gray", "olive", "cyan"]
+        plt.title("Classes Distribution in layer " + str(layer))
+        plt.xlabel("PC-1")
+        plt.ylabel("PC-2")
+
+        for i in range(10):
+            # plt.scatter(pc_1, pc_2)
+            indices = np.argwhere(labels == i).ravel()
+            plt.scatter(pc_1[indices], pc_2[indices], color=colorList[i], marker="o", s=5)
+        plt.show()
+        pass
+
+    act_features_1 = P.act_features_1.detach().cpu().numpy()
+    act_features_2 = P.act_features_2.detach().cpu().numpy()
+    act_features_3 = P.act_features_3.detach().cpu().numpy()
+    act_features_4 = P.act_features_4.detach().cpu().numpy()
+    mpl_pca_projection(act_features_1, 1, labels_test)
+    mpl_pca_projection(act_features_2, 2, labels_test)
+    mpl_pca_projection(act_features_3, 3, labels_test)
+    mpl_pca_projection(act_features_4, 4, labels_test)
+    pass
 
 
 if __name__ == '__main__':
@@ -325,5 +389,6 @@ if __name__ == '__main__':
     # plot_pcs(pcs)
     #
     # # subtask 4
-    # plot_projection(pcs, data)
-    train()
+    plot_projection(pcs, data)
+    # train()
+    task_4()
