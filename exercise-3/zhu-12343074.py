@@ -353,7 +353,8 @@ def task_4():
         for i in range(10):
             # plt.scatter(pc_1, pc_2)
             indices = np.argwhere(labels == i).ravel()
-            plt.scatter(pc_1[indices], pc_2[indices], color=colorList[i], marker="o", s=5)
+            plt.scatter(pc_1[indices], pc_2[indices], color=colorList[i], marker="o", s=5, label=str(i))
+        plt.legend()
         plt.show()
         pass
 
@@ -371,7 +372,7 @@ def task_4():
 if __name__ == '__main__':
     # You can run this part of the code from the terminal using python ex1.py
     # dataloading
-    data = load_data()
+    # data = load_data()
 
     # subtask 1
     # plot_examples(data)
@@ -383,12 +384,12 @@ if __name__ == '__main__':
     #
     #
     # # subtask 3
-    pcs = do_pca(data)
+    # pcs = do_pca(data)
     #
     # # subtask 3
     # plot_pcs(pcs)
     #
     # # subtask 4
-    plot_projection(pcs, data)
+    # plot_projection(pcs, data)
     # train()
     task_4()
