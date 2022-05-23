@@ -372,24 +372,24 @@ def task_4():
 if __name__ == '__main__':
     # You can run this part of the code from the terminal using python ex1.py
     # dataloading
-    # data = load_data()
+    data = load_data()
 
     # subtask 1
-    # plot_examples(data)
+    plot_examples(data)
 
     # # subtask 2
-    # mnist_vectors, labels = convert_mnist_to_vectors(data)
+    mnist_vectors, labels = convert_mnist_to_vectors(data)
     # #Comment in once the above function is implemented, to check the shape of your dataset
-    # print('Data shape', mnist_vectors)
+    print('Data shape', mnist_vectors)
     #
     #
     # # subtask 3
-    # pcs = do_pca(data)
+    pcs = do_pca(data)
     #
     # # subtask 3
-    # plot_pcs(pcs)
+    plot_pcs(pcs)
     #
     # # subtask 4
-    # plot_projection(pcs, data)
-    # train()
+    plot_projection(pcs, data)
+    train()
     task_4()
