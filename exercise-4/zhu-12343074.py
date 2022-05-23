@@ -1,13 +1,15 @@
 from matplotlib import pyplot as plt
+import torchvision
 from torchvision import datasets
 import torchvision.transforms as transforms
-import torch
 import torch.nn as nn
-import numpy as np
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 import torch.optim as optim
 import torch.nn.functional as F
+import torch
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import ImageGrid
 
 
 def task_1():
@@ -151,11 +153,46 @@ def train_and_eval(n_epochs, normalization=False,
 
 def task_3():
     train_and_eval(n_epochs=5, normalization=False, use_gpu=True)
-    print("The result after normalization:\n")
-    train_and_eval(n_epochs=5, normalization=True, use_gpu=True)
+    print("\nThe result after normalization:\n")
+    # train_and_eval(n_epochs=5, normalization=True, use_gpu=True)
+    pass
+
+
+def min_max_normalize(tensor):
+    #########################
+    #### Your Code here  ####
+    #########################\
+    tensor = (tensor - tensor.min()) / (tensor.max() - tensor.min())
+    return tensor
+
+
+def plot_list_to_grid(list_of_images, nr, nc):
+    fig = plt.figure(figsize=(nr, nc))
+    grid = ImageGrid(fig, 111, nrows_ncols=(nr, nc), axes_pad=0.1)
+    for ax, im in zip(grid, list_of_images):
+        # Iterating over the grid returns the Axes.
+        ax.imshow(im, cmap='gray')
+    plt.show()
+    plt.close()
+
+
+def task_4():
+    model = torch.load("ConvNet4.ckpt")
+    conv_filter1 = model['conv1.weight']
+    # conv_filter1 = conv_filter1.permute(0, 2, 3, 1).cpu().numpy()
+    our_filters = conv_filter1[:4]
+    # our_filters = our_filters.view(4, 1, -1)
+    our_filters = min_max_normalize(our_filters).view(4, 1, 5, 5).permute(0, 2, 3, 1).cpu().numpy()
+    plot_list_to_grid(our_filters, 2, 2)
+
+    alexnet = torchvision.models.alexnet(pretrained=True)
+    alexnet_filters = alexnet.features[0].weight.data
+    alexnet_filters = min_max_normalize(alexnet_filters).permute(0, 2, 3, 1).cpu().numpy()
+    plot_list_to_grid(alexnet_filters, 8, 8)
     pass
 
 
 if __name__ == "__main__":
     # task_1()
-    task_3()
+    # task_3()
+    task_4()
