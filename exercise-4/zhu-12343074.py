@@ -1,4 +1,3 @@
-from matplotlib import pyplot as plt
 import torchvision
 from torchvision import datasets
 import torchvision.transforms as transforms
@@ -161,8 +160,16 @@ def task_3():
 def min_max_normalize(tensor):
     #########################
     #### Your Code here  ####
-    #########################\
-    tensor = (tensor - tensor.min()) / (tensor.max() - tensor.min())
+    #########################
+    d = tensor.shape[0]
+    c = tensor.shape[1]
+    h = tensor.shape[2]
+    w = tensor.shape[3]
+    tensor = tensor.view(d, -1)
+    max = torch.max(tensor, 1).values.view(1, -1).t()
+    min = torch.min(tensor, 1).values.view(1, -1).t()
+    tensor = (tensor - min) / (max - min)
+    tensor = tensor.view(d, c, h, w)
     return tensor
 
 
@@ -183,11 +190,13 @@ def task_4():
     our_filters = conv_filter1[:4]
     # our_filters = our_filters.view(4, 1, -1)
     our_filters = min_max_normalize(our_filters).view(4, 1, 5, 5).permute(0, 2, 3, 1).cpu().numpy()
+    print("The convolution filters of the trained ConvNet's first layer")
     plot_list_to_grid(our_filters, 2, 2)
 
     alexnet = torchvision.models.alexnet(pretrained=True)
     alexnet_filters = alexnet.features[0].weight.data
     alexnet_filters = min_max_normalize(alexnet_filters).permute(0, 2, 3, 1).cpu().numpy()
+    print("The convolution filters of the trained AlexNet's first layer")
     plot_list_to_grid(alexnet_filters, 8, 8)
     pass
 
