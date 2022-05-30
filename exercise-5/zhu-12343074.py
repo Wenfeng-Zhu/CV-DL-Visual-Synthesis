@@ -109,17 +109,19 @@ def task_1():
                     correct += (predicted_label == test_label).sum()
                     total += test_label.size(0)
 
-            accuracy = correct / total
-            acc_per_epoch.append({epoch: accuracy})
-            print("\n *** Summary: Epoch [{} / {}]  Test Accuracy: {}%***".format(epoch + 1, n_epochs, accuracy * 100))
-            ############ your code here ############
-            # record every epoch's accuaracy and   #
-            # save the model if it has the best    #
-            # performance. Check last week's sheet #
-            pass
-            ############ end of your code############
+            accuracy = correct.item() / total
+            acc_per_epoch.append(accuracy * 100)
+            print("\n *** Summary: Epoch [{} / {}]  Test Accuracy: {}% ***".format(epoch + 1, n_epochs, accuracy * 100))
+
     path_save = './logging/{}'.format(model_name)
     np.save(path_save + '.npy', acc_per_epoch)
+    epochs = np.array(range(1, 11))
+    plt.title("Accuracies for each epoch")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracies(%)")
+    plt.plot(epochs, acc_per_epoch)
+    plt.scatter(epochs, acc_per_epoch)
+    plt.show()
 
 
 if __name__ == "__main__":
