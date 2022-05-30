@@ -49,23 +49,25 @@ class Net(nn.Module):
         return out
 
 
-def task_1_1():
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-
-    def class_label(prediction):
-        _, predicted_class = torch.max(prediction, 1)
-        return predicted_class
-
-    # load data ~200MB for CIFAR10 dataset
+def load_data(transform_train, transform_test):
     trainset_base = torchvision.datasets.CIFAR10(root='../data', train=True, download=True,
-                                                 transform=transforms.ToTensor())
+                                                 transform=transform_train)
     trainloader_base = torch.utils.data.DataLoader(trainset_base, batch_size=16, shuffle=True)
 
     testset_base = torchvision.datasets.CIFAR10(root='../data', train=False, download=True,
-                                                transform=transforms.ToTensor())
+                                                transform=transform_test)
     testloader_base = torch.utils.data.DataLoader(testset_base, batch_size=16, shuffle=False)
 
-    # choose network
+    return trainloader_base, testloader_base
+
+
+def class_label(prediction):
+    _, predicted_class = torch.max(prediction, 1)
+    return predicted_class
+
+
+def train_test(trainloader_base, testloader_base, model_name):
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     net = Net()
     net.to(device)
 
@@ -77,7 +79,7 @@ def task_1_1():
     # train model
     n_epochs = 10
     best_acc = 0
-    model_name = 'base'
+    # model_name = 'base'
     # save the accuracies for each epoch in this list
     acc_per_epoch = []
     for epoch in range(n_epochs):  # loop over the dataset multiple times
@@ -112,9 +114,14 @@ def task_1_1():
             accuracy = correct.item() / total
             acc_per_epoch.append(accuracy * 100)
             print("\n *** Summary: Epoch [{} / {}]  Test Accuracy: {}% ***".format(epoch + 1, n_epochs, accuracy * 100))
-
     path_save = './logging/{}'.format(model_name)
     np.save(path_save + '.npy', acc_per_epoch)
+    return acc_per_epoch
+
+
+def train_base():
+    trainloader_base, testloader_base = load_data(transforms.ToTensor(), transforms.ToTensor())
+    acc_per_epoch = train_test(trainloader_base, testloader_base, 'base')
     epochs = np.array(range(1, 11))
     plt.title("Accuracies for each epoch")
     plt.xlabel("Epoch")
@@ -124,26 +131,27 @@ def task_1_1():
     plt.show()
 
 
-def task_1_2():
+def show_transformed():
     transform_train = transforms.Compose([
-        # extra aumentations
+        # extra augmentations
         transforms.RandomHorizontalFlip(),
         transforms.RandomCrop(size=32, padding=4),
-        transforms.ToTensor()
+        transforms.ToTensor(),
         # normalization
-        # transforms.Normalize()
+        # transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
     ])
     transform_val = transforms.Compose([
         # extra aumentations
         transforms.GaussianBlur(kernel_size=3, sigma=0.2),
         transforms.ToTensor(),
         # normalization
-        ############ your code here ############
+        # transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
     ])
-    trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
+
+    trainset = torchvision.datasets.CIFAR10(root='../data', train=True, download=True, transform=transform_train)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=16, shuffle=True)
 
-    testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_val)
+    testset = torchvision.datasets.CIFAR10(root='../data', train=False, download=True, transform=transform_val)
     testloader = torch.utils.data.DataLoader(testset, batch_size=16, shuffle=False)
 
     def against_img(index):
@@ -158,6 +166,7 @@ def task_1_2():
         f2.title.set_text("Transformed Image")
         plt.show()
 
+    print("Show some comparison images:")
     against_img(100)
     against_img(1000)
     against_img(500)
@@ -165,8 +174,48 @@ def task_1_2():
     pass
 
 
+def train_normalize_transformed():
+    transform_train = transforms.Compose([
+        # extra augmentations
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomCrop(size=32, padding=4),
+        transforms.ToTensor(),
+        # normalization
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+    ])
+    transform_val = transforms.Compose([
+        # extra aumentations
+        transforms.GaussianBlur(kernel_size=3, sigma=0.2),
+        transforms.ToTensor(),
+        # normalization
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+    ])
+
+    trainloader, testloader = load_data(transform_train, transform_val)
+    train_test(trainloader, testloader, 'transformed')
+
+
+def compare_acc():
+    acc_per_epoch_base = np.load('./logging/base.npy')
+    acc_per_epoch_transformed = np.load('./logging/transformed.npy')
+    epochs = np.array(range(1, 11))
+    plt.title("Accuracies for each epoch")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracies(%)")
+    plt.plot(epochs, acc_per_epoch_base, color='red', label='base')
+    plt.plot(epochs, acc_per_epoch_transformed, color='blue', label='transformed')
+    plt.scatter(epochs, acc_per_epoch_base, color='red')
+    plt.scatter(epochs, acc_per_epoch_transformed, color='blue')
+    plt.legend()
+    plt.show()
+
+
 if __name__ == "__main__":
-    # task_1_1()
-    task_1_2()
-    # task_3()
-    # task_4()
+    # # task-1.1
+    # train_base()
+    # # task_1.2
+    # show_transformed()
+    # # task_1.3
+    # train_normalize_transformed()
+    compare_acc()
+
