@@ -49,7 +49,7 @@ class Net(nn.Module):
         return out
 
 
-def task_1():
+def task_1_1():
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     def class_label(prediction):
@@ -86,7 +86,7 @@ def task_1():
             example, label = example.to(device), label.to(device)
             # reset gradient
             optimizer.zero_grad()
-            prediction = net(example)  # todo change name
+            prediction = net(example)
             loss = criterion(prediction, label)
             loss.backward()
             optimizer.step()
@@ -105,7 +105,7 @@ def task_1():
                 net.eval()  # eval mode (matters for batchnorm layer, dropout, ...)
                 with torch.no_grad():
                     test_prediction = net(test_example)
-                    predicted_label = class_label(test_prediction)  # todo change name
+                    predicted_label = class_label(test_prediction)
                     correct += (predicted_label == test_label).sum()
                     total += test_label.size(0)
 
@@ -124,7 +124,49 @@ def task_1():
     plt.show()
 
 
+def task_1_2():
+    transform_train = transforms.Compose([
+        # extra aumentations
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomCrop(size=32, padding=4),
+        transforms.ToTensor()
+        # normalization
+        # transforms.Normalize()
+    ])
+    transform_val = transforms.Compose([
+        # extra aumentations
+        transforms.GaussianBlur(kernel_size=3, sigma=0.2),
+        transforms.ToTensor(),
+        # normalization
+        ############ your code here ############
+    ])
+    trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=16, shuffle=True)
+
+    testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_val)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=16, shuffle=False)
+
+    def against_img(index):
+        img_original = trainset.data[index]
+        img_transform = trainset.__getitem__(index)[0].permute(1, 2, 0)
+        fig = plt.figure()
+        f1 = fig.add_subplot(121)
+        f2 = fig.add_subplot(122)
+        f1.imshow(img_original)
+        f1.title.set_text("Original Image")
+        f2.imshow(img_transform)
+        f2.title.set_text("Transformed Image")
+        plt.show()
+
+    against_img(100)
+    against_img(1000)
+    against_img(500)
+    against_img(400)
+    pass
+
+
 if __name__ == "__main__":
-    task_1()
+    # task_1_1()
+    task_1_2()
     # task_3()
     # task_4()
