@@ -21,7 +21,7 @@ def task_1():
                       [[[1., 0.], [1., 0.]]],
                       [[[1., 1.], [0., 0.]]]])
     bias = torch.tensor([-1., -1., -1.])
-    conv = nn.Conv2d(in_channels=1, out_channels=3, kernel_size=(2, 2), bias=True, )
+    conv = nn.Conv2d(in_channels=1, out_channels=3, kernel_size=(2, 2), bias=True, padding=0)
     with torch.no_grad():
         conv.weight = nn.Parameter(w)
         conv.bias = nn.Parameter(bias)
@@ -202,6 +202,6 @@ def task_4():
 
 
 if __name__ == "__main__":
-    # task_1()
-    # task_3()
+    task_1()
+    task_3()
     task_4()
