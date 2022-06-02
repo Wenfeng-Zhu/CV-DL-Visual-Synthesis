@@ -8,6 +8,10 @@ from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+from PIL import Image
+from sklearn.decomposition import PCA
+
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 
 # ---------------Task 1.1 Define and train your network---------------#
@@ -210,6 +214,137 @@ def compare_acc():
     plt.show()
 
 
+def show_tensor(tensor, title):
+    if tensor.ndim == 4:
+        temp = tensor.squeeze()
+    else:
+        temp = tensor
+    plt.imshow(temp.cpu().permute(1, 2, 0))
+    plt.title(title)
+    plt.show()
+
+
+def task_2():
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    resNet = torchvision.models.resnet18(pretrained=True).eval().to(device)
+    print(resNet)
+    image = Image.open('pug.jpg')
+    transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
+    X = transform(image).unsqueeze(dim=0).to(device)
+
+    show_tensor(X.squeeze(), "The transformed image")
+    activation_maps = []
+
+    # define a hook function
+    def hook(module, input, output):
+        activation_maps.append(output)
+
+    # register the forward hook in the layer1 conv1 and conv2
+    resNet.layer1[0].conv1.register_forward_hook(hook)
+    resNet.layer1[0].conv2.register_forward_hook(hook)
+    output = resNet(X)
+
+    # print(resNet.layer1)
+    def activation_map_pca(map, title):
+        map1 = map.permute(0, 2, 3, 1).view(-1, 64).cpu().detach().numpy()
+        pca = PCA(n_components=3)
+        map1_reduce = torch.tensor(pca.fit_transform(map1)).view(1, 56, 56, 3).permute(0, 3, 1, 2)
+        show_tensor(map1_reduce, title)
+
+    activation_map_pca(activation_maps[0], "The activation map of conv1 in Layer1")
+    activation_map_pca(activation_maps[1], "The activation map of conv2 in Layer1")
+    pass
+
+
+def preprocess(img, size=224):
+    transform = transforms.Compose([
+        transforms.Resize(size),
+        transforms.ToTensor(),
+        transforms.Lambda(lambda x: x[None]),  # equivalent to unsqueeze()
+    ])
+    return transform(img)
+
+
+def saliency_maps(X, y, model):
+    """
+    Compute a class saliency map using the model for images X and labels y.
+
+    Input:
+    - X: Input images; Tensor of shape (N, 3, H, W)
+    - y: Labels for X; LongTensor of shape (N,)
+    - model: A pretrained CNN that will be used to compute the saliency map.
+
+    Returns:
+    - saliency: A Tensor of shape (N, H, W) giving the saliency maps for the input
+    images.
+    """
+    # Make sure the model is in "test" mode
+    model.eval()
+
+    # make a copy of the tensor and set X_var to require gradient for later visualization
+    X_var = X.clone().detach()
+    X_var.requires_grad = True
+    y_var = y.clone().detach()
+    saliency = None
+    ############ your code here ############
+
+    ##############################################################################
+    # Implement this function. Perform a forward and backward pass through       #
+    # the model to compute the gradient of the correct class score with respect  #
+    # to each input image. You first want to compute the loss over the correct   #
+    # scores, and then compute the gradients with a backward pass.               #
+    ##############################################################################
+    output = model(X_var)
+    score, _ = torch.max(output, dim=1)
+    criterion = nn.CrossEntropyLoss()
+    loss = criterion(output, y_var)
+    loss.backward()
+    saliency, _ = torch.max(torch.abs(X_var.grad), dim=1)
+    ############ end of your code############
+    return saliency
+
+
+def show_saliency_maps():
+    # device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    names = ['catdog_243.png', 'catdog_243.png', 'snake_56.png', 'spider_72.png']
+
+    X = [np.array(Image.open(name).convert('RGB')) for name in names]
+    y = [int(s.rsplit('_')[1].rsplit('.')[0]) for s in names]
+    # intentionally change the label to a wrong one
+    y[1] = 285
+    model = torchvision.models.resnet18(pretrained=True).eval().to(device)
+    # Convert X and y from numpy arrays to Torch Tensors
+    X_tensor = torch.cat([preprocess(Image.fromarray(x)) for x in X], dim=0).to(device)
+    y_tensor = torch.LongTensor(y).to(device)
+    # Compute saliency maps for images in X
+    saliency = saliency_maps(X_tensor, y_tensor, model)
+
+    # Convert the saliency map from Torch Tensor to numpy array and show images
+    # and saliency maps together.
+    saliency = saliency.cpu().numpy()
+    N = len(X)
+    for i in range(N):
+        plt.subplot(2, N, i + 1)
+        plt.imshow(X[i])
+        plt.axis('off')
+        plt.title('ground truth label set to {}'.format(y[i]))
+        plt.subplot(2, N, N + i + 1)
+        plt.imshow(saliency[i], cmap=plt.cm.hot)
+        plt.axis('off')
+        plt.gcf().set_size_inches(20, 10)
+    plt.show()
+    pass
+
+
+def gather_example():
+    N, C = 4, 5
+    s = torch.randn(N, C)
+    y = torch.LongTensor([1, 2, 1, 3])
+    print(s)
+    print(y)
+    print(s.gather(1, y.view(-1, 1)).squeeze())
+
+
 if __name__ == "__main__":
     # # task-1.1
     # train_base()
@@ -217,5 +352,8 @@ if __name__ == "__main__":
     # show_transformed()
     # # task_1.3
     # train_normalize_transformed()
-    compare_acc()
-
+    # compare_acc()
+    # task_2()
+    # gather_example()
+    show_saliency_maps()
+    pass
