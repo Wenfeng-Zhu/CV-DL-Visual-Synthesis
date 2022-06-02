@@ -71,7 +71,6 @@ def class_label(prediction):
 
 
 def train_test(trainloader_base, testloader_base, model_name):
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     net = Net()
     net.to(device)
 
@@ -178,7 +177,28 @@ def show_transformed():
     pass
 
 
-def train_normalize_transformed():
+def train_transformed():
+    transform_train = transforms.Compose([
+        # extra augmentations
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomCrop(size=32, padding=4),
+        transforms.ToTensor(),
+        # normalization
+        # transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+    ])
+    transform_val = transforms.Compose([
+        # extra aumentations
+        transforms.GaussianBlur(kernel_size=3, sigma=0.2),
+        transforms.ToTensor(),
+        # normalization
+        # transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+    ])
+
+    trainloader, testloader = load_data(transform_train, transform_val)
+    train_test(trainloader, testloader, 'transformed')
+
+
+def train_transformed_normalize():
     transform_train = transforms.Compose([
         # extra augmentations
         transforms.RandomHorizontalFlip(),
@@ -196,20 +216,23 @@ def train_normalize_transformed():
     ])
 
     trainloader, testloader = load_data(transform_train, transform_val)
-    train_test(trainloader, testloader, 'transformed')
+    train_test(trainloader, testloader, 'normalized')
 
 
 def compare_acc():
     acc_per_epoch_base = np.load('./logging/base.npy')
     acc_per_epoch_transformed = np.load('./logging/transformed.npy')
+    acc_per_epoch_normalized = np.load('./logging/normalized.npy')
     epochs = np.array(range(1, 11))
     plt.title("Accuracies for each epoch")
     plt.xlabel("Epoch")
     plt.ylabel("Accuracies(%)")
     plt.plot(epochs, acc_per_epoch_base, color='red', label='base')
     plt.plot(epochs, acc_per_epoch_transformed, color='blue', label='transformed')
+    plt.plot(epochs, acc_per_epoch_normalized, color='green', label='normalized')
     plt.scatter(epochs, acc_per_epoch_base, color='red')
     plt.scatter(epochs, acc_per_epoch_transformed, color='blue')
+    plt.scatter(epochs, acc_per_epoch_normalized, color='green')
     plt.legend()
     plt.show()
 
@@ -244,7 +267,7 @@ def task_2():
     resNet.layer1[0].conv2.register_forward_hook(hook)
     output = resNet(X)
 
-    # print(resNet.layer1)
+    # use PCA to reduce the dimensions of the channels
     def activation_map_pca(map, title):
         map1 = map.permute(0, 2, 3, 1).view(-1, 64).cpu().detach().numpy()
         pca = PCA(n_components=3)
@@ -295,7 +318,7 @@ def saliency_maps(X, y, model):
     # scores, and then compute the gradients with a backward pass.               #
     ##############################################################################
     output = model(X_var)
-    score, _ = torch.max(output, dim=1)
+    score, Indices = torch.max(output, dim=1)
     criterion = nn.CrossEntropyLoss()
     loss = criterion(output, y_var)
     loss.backward()
@@ -346,14 +369,15 @@ def gather_example():
 
 
 if __name__ == "__main__":
-    # # task-1.1
-    # train_base()
-    # # task_1.2
-    # show_transformed()
-    # # task_1.3
-    # train_normalize_transformed()
-    # compare_acc()
-    # task_2()
+    # task-1.1
+    train_base()
+    # task_1.2
+    show_transformed()
+    # task_1.3
+    train_transformed()
+    train_transformed_normalize()
+    compare_acc()
+    task_2()
     # gather_example()
     show_saliency_maps()
     pass
