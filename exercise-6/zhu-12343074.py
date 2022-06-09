@@ -130,8 +130,10 @@ def load_vgg16():
 
 # Total Variation Loss
 def total_variation_loss(img, weight):
-    # Your code here
-    pass
+    bs_img, c_img, h_img, w_img = img.size()
+    tv_h = torch.pow(img[:, :, 1:, :] - img[:, :, :-1, :], 2).sum()
+    tv_w = torch.pow(img[:, :, :, 1:] - img[:, :, :, :-1], 2).sum()
+    return weight * (tv_h + tv_w) / (bs_img * c_img * h_img * w_img)
 
 
 def visualise_layer_filter(model, layer_nmbr, filter_nmbr, num_optim_steps=26):
@@ -141,8 +143,8 @@ def visualise_layer_filter(model, layer_nmbr, filter_nmbr, num_optim_steps=26):
                                           size=(224, 224, 3)))
 
     # Process image and return variable
-    processed_image = preprocess_image(rand_img, False)
-    processed_image = torch.tensor(processed_image, device=device).float()
+    processed_image = preprocess_image(rand_img, True)
+    processed_image = processed_image.clone().detach().to(device)
     processed_image.requires_grad = True
     # Define optimizer for the image
     optimizer = Adam([processed_image], lr=0.1, weight_decay=1e-5)
@@ -184,6 +186,119 @@ def visualise_layer_filter(model, layer_nmbr, filter_nmbr, num_optim_steps=26):
     plt.show()
 
 
+def deep_dream(img_path, model, layer_nmbr=30, num_optim_steps=40):
+    # Generate a random image
+    img = np.asarray(Image.open(img_path))
+    img = Image.fromarray(img)
+
+    # Process image and return variable
+    processed_image = preprocess_image(img, True)
+    processed_image = processed_image.clone().detach().to(device)
+    processed_image.requires_grad = True
+    # Define optimizer for the image
+    optimizer = Adam([processed_image], lr=0.1, weight_decay=1e-5)
+
+    for n in range(0, 10):
+        for i in range(1, num_optim_steps):
+            optimizer.zero_grad()
+            # Assign create image to a variable to move forward in the model
+            x = processed_image
+            for index, layer in enumerate(model):
+                # Forward pass layer by layer
+                x = layer(x)
+                if index == layer_nmbr: break
+
+            filters = x[0]
+            ten_filters_max = filters.topk(k=10, dim=0)[0]
+
+            conv_output = ten_filters_max[n]
+            # for i in range(1, 11):
+            #     plt.subplot(2, 5, i)
+            #     plt.imshow(ten_filters_max[i-1].cpu().detach().numpy())
+            # plt.show()
+            # Loss function is the mean of the output of the selected layer/filter
+            # We try to minimize the mean of the output of that specific filter
+
+            # loss = -torch.mean(conv_output)
+
+            # You may need to add total variation loss later
+            loss_tv = total_variation_loss(processed_image, 400.)
+            loss = -torch.mean(conv_output) + loss_tv * 1.
+
+            # print(f'Step {i:05d}. Loss:{loss.data.cpu().numpy():0.2f}')
+            # Compute gradients
+            loss.backward()
+            # Apply gradients
+            optimizer.step()
+            # Recreate image
+        optimized_image = recreate_image(processed_image.cpu())
+        plt.subplot(2, 5, n + 1)
+        plt.imshow(optimized_image)
+        plt.title('Filter No.' + str(n + 1))
+
+    plt.savefig("Top 10 filter optimization of " + img_path, dpi=500)
+    plt.show()
+    pass
+
+
+def deep_dream_multilayer(img_path, model, layer_1=10, layer_2=21, layer_3=28, num_optim_steps=40):
+    # Generate a random image
+    img = np.asarray(Image.open(img_path))
+    img = Image.fromarray(img)
+
+    # Process image and return variable
+    processed_image = preprocess_image(img, True)
+    processed_image = processed_image.clone().detach().to(device)
+    processed_image.requires_grad = True
+    # Define optimizer for the image
+    optimizer = Adam([processed_image], lr=0.1, weight_decay=1e-5)
+
+    for i in range(1, num_optim_steps):
+        optimizer.zero_grad()
+        # Assign create image to a variable to move forward in the model
+        x = processed_image
+        loss = 0
+        for index, layer in enumerate(model):
+            # Forward pass layer by layer
+            x = layer(x)
+            if index == layer_1:
+                conv_output = x[0].topk(k=10, dim=0)[0][0]
+                loss_tv = total_variation_loss(processed_image, 400.)
+                loss += -torch.mean(conv_output) + loss_tv * 1.
+            elif index == layer_2:
+                conv_output = x[0].topk(k=10, dim=0)[0][0]
+                loss_tv = total_variation_loss(processed_image, 400.)
+                loss += -torch.mean(conv_output) + loss_tv * 1.
+            elif index == layer_3:
+                conv_output = x[0].topk(k=10, dim=0)[0][0]
+                loss_tv = total_variation_loss(processed_image, 400.)
+                loss += -torch.mean(conv_output) + loss_tv * 1.
+
+        # for i in range(1, 11):
+        #     plt.subplot(2, 5, i)
+        #     plt.imshow(ten_filters_max[i-1].cpu().detach().numpy())
+        # plt.show()
+        # Loss function is the mean of the output of the selected layer/filter
+        # We try to minimize the mean of the output of that specific filter
+
+        # loss = -torch.mean(conv_output)
+
+        # You may need to add total variation loss later
+
+        # print(f'Step {i:05d}. Loss:{loss.data.cpu().numpy():0.2f}')
+        # Compute gradients
+        loss.backward()
+        # Apply gradients
+        optimizer.step()
+        # Recreate image
+    optimized_image = recreate_image(processed_image.cpu())
+    plt.imshow(optimized_image)
+    plt.title("Multiple layers Optimization")
+    plt.savefig("Multiple layers Optimization")
+    plt.show()
+    pass
+
+
 if __name__ == "__main__":
     load_vgg16()
 
@@ -208,3 +323,11 @@ if __name__ == "__main__":
     visualise_layer_filter(model, 13, 100)
     visualise_layer_filter(model, 5, 100)
     visualise_layer_filter(model, 28, 120)
+
+    deep_dream('img-1.jpg', model)
+    deep_dream('img-2.jpg', model)
+    deep_dream('img-3.jpg', model)
+    deep_dream('img-4.jpg', model)
+    deep_dream('img-5.jpg', model)
+
+    deep_dream_multilayer('img-1.jpg', model)
