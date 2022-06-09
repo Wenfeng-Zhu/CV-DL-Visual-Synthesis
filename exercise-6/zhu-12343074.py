@@ -123,8 +123,9 @@ def recreate_image(im_as_var):
 
 
 def load_vgg16():
-    vgg16 = torchvision.models.vgg16(pretrained=True).to(device)
-    print(vgg16)
+    vgg16 = torchvision.models.vgg16(pretrained=True).features.to(device)
+    for index, layer in enumerate(vgg16):
+        print(layer)
 
 
 # Total Variation Loss
@@ -174,9 +175,13 @@ def visualise_layer_filter(model, layer_nmbr, filter_nmbr, num_optim_steps=26):
         # Save image
         if i % 5 == 0:
             optimized_image = recreate_image(processed_image.cpu())
-            im_path = './output_filters_visualization/img' + str(layer_nmbr) + \
-                      '_f' + str(filter_nmbr) + '_iter' + str(i) + '.jpg'
+            im_path = './output_filters_visualization/img' + str(layer_nmbr) + '_f' + str(filter_nmbr) + '_iter' + str(
+                i) + '.jpg'
             save_image(optimized_image, im_path)
+            plt.subplot(1, 5, int(i / 5))
+            plt.imshow(optimized_image)
+            plt.title(str(layer_nmbr) + '_' + str(filter_nmbr) + '_' + str(i))
+    plt.show()
 
 
 if __name__ == "__main__":
